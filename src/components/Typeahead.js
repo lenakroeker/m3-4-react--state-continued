@@ -7,8 +7,21 @@ import GlobalStyles from './GlobalStyles';
 
 const Typeahead = (props) => {
     const [value, setValue] = React.useState('');
+    const [selectedSuggestionIndex, setSelectedSuggestionIndex] = React.useState(0);
 
+    // return list of books that match
+
+    let matchingSuggestions = props.suggestions.filter((book) => {
+        if (book.title.toLowerCase().includes(value.toLowerCase()) && value.length > 1) {
+
+            return book;
+        }
+    }
+    )
+
+    let selectedBook = matchingSuggestions[selectedSuggestionIndex];
     return (
+        // input and clear button
 
         <>
             <Input type="text"
@@ -17,44 +30,57 @@ const Typeahead = (props) => {
                 onKeyDown={(ev) => {
                     switch (ev.key) {
                         case "Enter": {
-                            props.handleSelect(ev.target.value);
+                            window.alert(selectedBook.title);
+                            props.handleSelect(selectedBook.title);
+                            setValue(selectedBook.title);
                             return;
                         }
                         case "ArrowUp": {
-
+                            if (selectedSuggestionIndex >= 1) {
+                                setSelectedSuggestionIndex(selectedSuggestionIndex - 1);
+                                return
+                            }
                         }
                         case "ArrowDown": {
-
+                            if (selectedSuggestionIndex < matchingSuggestions.length - 1)
+                                setSelectedSuggestionIndex(selectedSuggestionIndex + 1);
+                            return;
+                        }
+                        case "Escape": {
+                            console.log("escaped")
                         }
                     }
                 }} />
             <Clear onClick={() => setValue('')}>Clear</Clear>
 
-            <SuggList>
-                {props.suggestions.filter((book) => {
-                    if (book.title.toLowerCase().includes(value.toLowerCase()) && value.length > 1) {
+            {/* list of suggested books */}
 
-                        return book;
+            <SuggList>{
 
-                    }
-                }
-                ).map((book) => {
+                matchingSuggestions.map((book, index) => {
                     const lowercaseSugg = book.title.toLowerCase();
                     const matchstart = lowercaseSugg.indexOf(value.toLowerCase())
                     const matchEnd = matchstart + value.length;
                     const firstHalf = book.title.slice(0, matchEnd)
                     const secondHalf = book.title.slice(matchEnd)
+                    const isSelected = index === selectedSuggestionIndex;
 
+                    return <SuggItem key={props.suggestions.id} onClick={() => { window.alert(book.title); setValue(book.title) }}
+                        onMouseEnter={() => { setSelectedSuggestionIndex(index) }}
+                        style={{
+                            background: isSelected ? 'hsla(50deg, 100%, 80%, 0.25)' : 'transparent',
+                        }}>
 
-
-                    return <SuggItem onClick={() => { window.alert(book.title) }}>
                         <Matched>{firstHalf}</Matched><Bold >{secondHalf}</Bold>
                         <Tiny> in </Tiny> <Genre> {props.categories[book.categoryId].name}</Genre> </SuggItem>
+
                 })}
             </SuggList>
         </ >
     )
 }
+
+// styling
 
 const Clear = styled.button`
     background: darkblue;
